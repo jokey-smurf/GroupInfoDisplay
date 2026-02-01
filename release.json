@@ -1,0 +1,14 @@
+{
+  "releases": [
+    {
+      "name": "Group Info Display",
+      "version": "v1.0.0",
+      "filename": "GroupInfoDisplay-v1.0.0.zip",
+      "nolib": false,
+      "metadata": [
+        { "flavor": "mainline", "interface": 120001 },
+        { "flavor": "mainline", "interface": 120000 }
+      ]
+    }
+  ]
+}
