@@ -15,18 +15,18 @@ I found this weakaura (RIP) useful and was immediately missing it in my
 - Last but not least, hideable in combat (or not)
 
 ## Usage
-/gid font NN - Set font size
-/gid reset - Reset settings
+- /gid font NN - Set font size
+- /gid reset - Reset settings
 
-Right-click GID display to configure.
+Right-click the GID display to configure.
 
 Upon logging in the first time after installing GID (or resetting), the GID 
 display will appear in the middle of the screen with a background.  You can 
-move it around by draggingit with your mouse.  When you have it in the 
-location you want, right-clickit and select "Display Lock" on the pop-up menu.  
-NOTE: It is only moveablewhen it is unlocked (denoted by the presence of background).
+move it around by dragging it with your mouse.  When you have it in the 
+location you want, right-click again and select "Display Lock" on the pop-up menu. 
+NOTE: It is only moveable when it is unlocked (denoted by the presence of background).
 
-Configurarion is done by right-clicking the GID display, and toggling the 
+Configuration is done by right-clicking the GID display and toggling the 
 applicable information in the pop-up menu.
 
 Coded with 100% __VIBE__
