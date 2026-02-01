@@ -1,0 +1,12 @@
+## Interface: 120000, 120001
+## Title: |cff00CED1Group Info Display|r
+## Version: 1.0.0
+## Notes: Addon replacement for FUNKI's Weakaura Group Info Display. Type /gid for commands.
+## Author: Jokey Smurf
+## IconTexture: Interface\AddOns\GroupInfoDisplay\Media\logo
+## SavedVariables: GroupInfoDisplayDB
+
+## Category-enUS: Smurf
+
+GroupInfo.lua
+GroupInfoDisplay.lua
