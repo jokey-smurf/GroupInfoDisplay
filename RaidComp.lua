@@ -1,5 +1,11 @@
 local addonName, addon = ...
 
+-- This was definitely not worth the time and effort.
+-- Several issues with embedding the role icons into a string and them moving that
+-- string around in a frame, changing the font size, or scaling.
+-- This solution handles scaling and movement, by creating a container frame for
+-- the entire string, and drawing each icon in a texture.
+
 local RaidComp = {}
 addon.RaidComp = RaidComp
 
@@ -38,7 +44,7 @@ local function CreateRoleSegment(raidComp, role, relativeTo)
     icon:SetPoint("LEFT", relativeTo, relativePoint, PADDING_SIDES, -1)
 
     -- Count Text - matching the yellow color from your screenshot
-    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local text = raidComp.frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     local fontPath, currentSize, flags = text:GetFont()
     text:SetFont(fontPath, raidComp.size, flags)
 
