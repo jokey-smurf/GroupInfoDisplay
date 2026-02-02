@@ -3,6 +3,7 @@
 local addonName, addon = ...
 GroupInfoDisplayDB = GroupInfoDisplayDB or {}
 addon.GroupInfoDisplayDB = GroupInfoDisplayDB
+RaidComp = addon.RaidComp
 
 GI = addon.GroupInfo
 
@@ -54,6 +55,7 @@ local frame = CreateFrame("Frame", "GroupInfoDisplayFrame", UIParent, "BackdropT
 --     DEFAULT_CONFIG.offsetY)
 frame:EnableMouse(true)
 frame:SetClampedToScreen(true)
+local raidComp = RaidComp:new(frame, 14)
 
 -- Rounded background (tooltip-style)
 frame:SetBackdrop({
@@ -86,22 +88,15 @@ local function SetLocked(lock)
     end
 end
 
+
 -- Text display
 local text = frame:CreateFontString(nil, "OVERLAY")
-text:SetFont(DEFAULT_FONT, DEFAULT_CONFIG.fontSize, "OUTLINE", "MONOCHROME")
+text:SetFont(DEFAULT_FONT, DEFAULT_CONFIG.fontSize, "OUTLINE") -- /relativePoint, "MONOCHROME")
 text:SetPoint("BOTTOM", 0, 5)
 text:SetSpacing(2)
 text:SetJustifyV("BOTTOM")
 text:SetJustifyH("CENTER")
 text:SetTextColor(1, 1, 1)
-
-local text2 = frame:CreateFontString(nil, "OVERLAY")
-text2:SetFont(DEFAULT_FONT, DEFAULT_CONFIG.fontSize, "OUTLINE", "MONOCHROME")
-text2:SetPoint("TOP", 0, 0)
-text2:SetSpacing(2)
-text2:SetJustifyV("BOTTOM")
-text2:SetJustifyH("CENTER")
-text2:SetTextColor(1, 1, 1)
 
 -- Drag functionality
 frame:SetScript("OnDragStart", frame.StartMoving)
@@ -126,21 +121,18 @@ frame:SetScript("OnUpdate", function(self, delta)
     _elapsed = 0
     GI:ClearUpdate()
 
-    local offset = 0
-    local raidCompAlpha = 0
     local displayText = ""
     local inInstance, instanceType = IsInInstance()
-    text2:SetText("")
+    local offset = 0 -- GroupInfoDisplayDB.fontSize
     if IsInRaid() then
         if GroupInfoDisplayDB.showGroupNumber then
-            offset = GroupInfoDisplayDB.fontSize + 5
             displayText = displayText .. GI.groupNumber .. "\n"
+            offset = GroupInfoDisplayDB.fontSize + text:GetSpacing()
         end
         if GroupInfoDisplayDB.showRaidComp then
             raidCompAlpha = 1
             displayText = displayText .. "\n"
-            local s = GI:RaidComposition(14, GroupInfoDisplayDB.fontSize)
-            text2:SetText(s)
+            raidComp:UpdateRoleCounts(GI.tankCount, 24, GI.damageCount)
         end
         if GroupInfoDisplayDB.showRaidDifficulty then
             displayText = displayText .. GI.raidDifficulty .. "\n"
@@ -179,18 +171,17 @@ frame:SetScript("OnUpdate", function(self, delta)
     text:SetText(displayText)
 
     -- Auto-resize frame based on text width
-    local textWidth = math.max(text:GetStringWidth(), text2:GetStringWidth())
-    local newWidth = textWidth + 10
-    if newWidth < 50 then newWidth = 50 end
-    frame:SetWidth(newWidth)
+    local raidCompWidth = GroupInfoDisplayDB.showRaidComp and raidComp:GetWidth() or 0
+    local textWidth = math.max(text:GetStringWidth(), raidCompWidth) + 10
+    textWidth = math.min(50, textWidth)
+    frame:SetWidth(textWidth)
 
-    local textHeight = text:GetStringHeight()
-    local newHeight = textHeight + 10
-    if newHeight < 20 then newHeight = 20 end
-    frame:SetHeight(newHeight)
+    local textHeight = text:GetStringHeight() + 10
+    textheight = math.min(20, textHeight)
+    frame:SetHeight(textHeight)
 
-    text2:SetPoint("TOP", frame, "TOP", -5, -offset)
-    text2:SetAlpha(raidCompAlpha)
+    raidComp.frame:SetPoint("TOP", frame, "TOP", 0, -(5 + offset))
+    raidComp.frame:SetShown(GroupInfoDisplayDB.showRaidComp)
 end)
 
 
@@ -267,6 +258,7 @@ local function InitializeMenu(self, level)
         GI.updatePending = true
     end)
 
+
     AddSeparator()
     AddItem("Display Lock", _locked, function()
         _locked = not _locked
@@ -290,9 +282,15 @@ local function ApplyFont()
     local fontSize = tonumber(GroupInfoDisplayDB.fontSize or DEFAULT_CONFIG.fontSize)
     if fontSize < 8 then
         fontSize = 8
+    elseif fontSize > 128 then
+        fontSize = 128
     end
     text:SetFont(fontPath, fontSize, flags)
-    text2:SetFont(fontPath, fontSize, flags)
+
+    raidComp:ChangeFontSize(fontSize)
+    raidComp:UpdateRoleCounts(GI.tankCount, GI.healerCount, GI.dpsCount)
+
+    GI:ForceUpdate()
 end
 
 -- apply the configuration change
@@ -338,7 +336,6 @@ SlashCmdList["GROUPINFODISPLAY"] = function(msg)
     if name and size then
         GroupInfoDisplayDB.fontSize = tonumber(size) or GroupInfoDisplayDB.fontSize
         ApplyFont()
-        GI:ForceUpdate()
         return
     end
 
@@ -354,6 +351,8 @@ local loginFrame = CreateFrame("Frame")
 loginFrame:RegisterEvent("PLAYER_LOGIN")
 loginFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 loginFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+loginFrame:RegisterEvent("UI_SCALE_CHANGED")
+loginFrame:RegisterEvent("DISPLAY_SIZE_CHANGED")
 loginFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_REGEN_DISABLED" then
         if GroupInfoDisplayDB.hideInCombat then
@@ -366,6 +365,11 @@ loginFrame:SetScript("OnEvent", function(self, event)
         if GroupInfoDisplayDB.hideInCombat then
             frame:Show()
         end
+        return
+    end
+
+    if event == "UI_SCALE_CHANGED" or event == "DISPLAY_SIZE_CHANGED" then
+        CTimer.After(0.5, ApplyFont())
         return
     end
 

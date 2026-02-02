@@ -8,5 +8,6 @@
 
 ## Category-enUS: Smurf
 
+RaidComp.lua
 GroupInfo.lua
 GroupInfoDisplay.lua

@@ -33,9 +33,9 @@ local colorNone = "1EFF00"
 -- local tankIcon = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:-7:64:64:0:19:22:41|t"
 -- local healerIcon = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:-7:64:64:20:39:1:20|t"
 -- local dpsIcon = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:-7:64:64:20:39:22:41|t"
-local ICON_TANK = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:%d:%d:0:%d:64:64:0:19:22:41|t"
-local ICON_HEALER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:%d:%d:0:%d:64:64:20:39:1:20|t"
-local ICON_DAMAGE = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:%d:%d:0:%d:64:64:20:39:22:41|t"
+local ICON_TANK = "|TInterface\\LFGFrame\\UI-LFG-ICON-ROLES:%d:%d:0:%d:64:64:0:32:0:32|t"
+local ICON_HEALER = "|TInterface\\LFGFrame\\UI-LFG-ICON-ROLES:%d:%d:0:%d:64:64:32:64:0:32|t"
+local ICON_DAMAGE = "|TInterface\\LFGFrame\\UI-LFG-ICON-ROLES:%d:%d:0:%d:64:64:0:32:32:64|t"
 
 -- format an information string
 local function FormatInfo(label, info, color)
@@ -47,18 +47,38 @@ end
 -- does funky scaling and movement depending on the placement in the frame and/or font size
 -- probs something I am missing
 function GroupInfo:RaidComposition(size, offset)
-    local function FormatIcon(icon)
-        addon.Msg("Roles", size, offset)
-        return string.format(icon, size, size, -offset)
+    local function GetRoleIconMarkup(role, size)
+        size = size or 16
+        local atlasName
+
+        -- Map roles to their modern Atlas names
+        if role == "TANK" then
+            atlasName = "roleicon-tiny-tank"
+        elseif role == "HEALER" then
+            atlasName = "roleicon-tiny-healer"
+        elseif role == "DAMAGER" or role == "DPS" then
+            atlasName = "roleicon-tiny-dps"
+        end
+
+        if not atlasName then return "" end
+
+        -- The |A markup is the modern Retail standard for injecting icons into text.
+        -- Format: |A:atlasname:height:width|a
+        return string.format("|A:%s:%d:%d|a", atlasName, size, size)
     end
+
+    -- local function FormatIcon(icon)
+    --     -- addon.Msg("Roles", size, offset)
+    --     return string.format(icon, size, size, -offset)
+    -- end
 
     local tankCount = GroupInfo.tankCount or 0
     local healerCount = GroupInfo.healerCount or 0
     local damageCount = GroupInfo.damageCount or 0
 
-    return FormatIcon(ICON_TANK) .. tankCount .. " " ..
-        FormatIcon(ICON_HEALER) .. healerCount .. " " ..
-        FormatIcon(ICON_DAMAGE) .. damageCount
+    return GetRoleIconMarkup("TANK") .. tankCount .. " " ..
+        GetRoleIconMarkup("HEALER") .. healerCount .. " " ..
+        GetRoleIconMarkup("DPS") .. damageCount
 end
 
 function GroupInfo:ForceUpdate()
@@ -263,7 +283,7 @@ eventFrame:RegisterEvent("CHALLENGE_MODE_START")
 -- eventFrame:RegisterEvent("CHALLENGE_MODE_RESET")
 
 eventFrame:SetScript("OnEvent", function(self, event)
-    addon.Msg("OnEvent", event, addon.IsLockedDown())
+    -- addon.Msg("OnEvent", event, addon.IsLockedDown())
 
     if event == "PLAYER_REGEN_DISABLED" then
         postCombatUpdate = false
