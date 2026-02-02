@@ -375,11 +375,3 @@ loginFrame:SetScript("OnEvent", function(self, event)
         return
     end
 end)
-
---[[
-local heroSubTreeID = C_ClassTalents.GetActiveHeroTalentSpec()
-if not heroSubTreeID then return false end
-local subTreeInfo = C_Traits.GetSubTreeInfo(C_ClassTalents.GetActiveConfigID(), heroSubTreeID)
-if not subTreeInfo then return false end
-return subTreeInfo.name and subTreeInfo.name == "Totemic" or false
---]]

@@ -9,7 +9,7 @@ GroupInfo.updatePending = true
 GroupInfo.lootSpec = ""
 GroupInfo.spec = ""
 GroupInfo.loadout = ""
-GroupInfo.dungeonDifficulty = "Not Set"
+GroupInfo.dungeonDifficulty = ""
 GroupInfo.raidComp = ""
 GroupInfo.raidDifficulty = ""
 GroupInfo.groupNumber = ""
@@ -44,7 +44,7 @@ local function FormatInfo(label, info, color)
 end
 
 -- get the Raid Composition display string
--- does funky scaling and movementdepending on the placement in the frame and/or font size
+-- does funky scaling and movement depending on the placement in the frame and/or font size
 -- probs something I am missing
 function GroupInfo:RaidComposition(size, offset)
     local function FormatIcon(icon)
@@ -258,19 +258,19 @@ eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
 -- Combat monitoring
 eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
--- eventFrame:RegisterEvent("CHALLENGE_MODE_START")
+eventFrame:RegisterEvent("CHALLENGE_MODE_START")
 -- eventFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
 -- eventFrame:RegisterEvent("CHALLENGE_MODE_RESET")
 
 eventFrame:SetScript("OnEvent", function(self, event)
-    -- addon.Msg("OnEvent", event, addon.IsLockedDown())
+    addon.Msg("OnEvent", event, addon.IsLockedDown())
 
     if event == "PLAYER_REGEN_DISABLED" then
         postCombatUpdate = false
         return
     end
 
-    if addon.IsLockedDown() then
+    if InCombatLockdown() then
         postCombatUpdate = true
         return
     end
@@ -310,7 +310,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
         return
     end
 
-    if event == "PLAYER_DIFFICULTY_CHANGED" then
+    if event == "PLAYER_DIFFICULTY_CHANGED" or event == "CHALLENGE_MODE_START" then
         UpdateRaidDifficulty()
         UpdateDungeonDifficulty()
         return

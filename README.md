@@ -5,9 +5,9 @@ I found this weakaura (RIP) useful and was immediately missing it in my
 12.0 UI. I decided to rewrite it as an addon to continue its legacy.
 
 ## Features
-- Group Number
-- Raid Composition
-- Raid/Dungeon Difficulty
+- Group Number (in raid)
+- Raid Composition (in raid)
+- Raid/Dungeon Difficulty (in group/raid/instance)
 - Current Specialization
 - Current Hero Talents
 - Current Loadout Name
@@ -28,5 +28,6 @@ NOTE: It is only moveable when it is unlocked (denoted by the presence of backgr
 
 Configuration is done by right-clicking the GID display and toggling the 
 applicable information in the pop-up menu.
+
 
 Coded with 100% __VIBE__
