@@ -23,66 +23,15 @@ local colorLFR = "E5CC63"
 local colorTimewalking = "E5CC63"
 local colorNone = "1EFF00"
 
--- Role Icons
--- Key Parameter Positions
--- To help you fine-tune the placement:
--- Size1 (14): Width
--- Size2 (14): Height
--- X-Offset (0): Horizontal move (positive = right, negative = left)
--- Y-Offset (-7): Vertical move (positive = up, negative = down)
--- local tankIcon = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:-7:64:64:0:19:22:41|t"
--- local healerIcon = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:-7:64:64:20:39:1:20|t"
--- local dpsIcon = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:-7:64:64:20:39:22:41|t"
-local ICON_TANK = "|TInterface\\LFGFrame\\UI-LFG-ICON-ROLES:%d:%d:0:%d:64:64:0:32:0:32|t"
-local ICON_HEALER = "|TInterface\\LFGFrame\\UI-LFG-ICON-ROLES:%d:%d:0:%d:64:64:32:64:0:32|t"
-local ICON_DAMAGE = "|TInterface\\LFGFrame\\UI-LFG-ICON-ROLES:%d:%d:0:%d:64:64:0:32:32:64|t"
-
 -- format an information string
 local function FormatInfo(label, info, color)
     color = color or colorNone
     return string.format('%s: |cFF%s%s|r', label, color, info)
 end
 
--- get the Raid Composition display string
--- does funky scaling and movement depending on the placement in the frame and/or font size
--- probs something I am missing
-function GroupInfo:RaidComposition(size, offset)
-    local function GetRoleIconMarkup(role, size)
-        size = size or 16
-        local atlasName
-
-        -- Map roles to their modern Atlas names
-        if role == "TANK" then
-            atlasName = "roleicon-tiny-tank"
-        elseif role == "HEALER" then
-            atlasName = "roleicon-tiny-healer"
-        elseif role == "DAMAGER" or role == "DPS" then
-            atlasName = "roleicon-tiny-dps"
-        end
-
-        if not atlasName then return "" end
-
-        -- The |A markup is the modern Retail standard for injecting icons into text.
-        -- Format: |A:atlasname:height:width|a
-        return string.format("|A:%s:%d:%d|a", atlasName, size, size)
-    end
-
-    -- local function FormatIcon(icon)
-    --     -- addon.Msg("Roles", size, offset)
-    --     return string.format(icon, size, size, -offset)
-    -- end
-
-    local tankCount = GroupInfo.tankCount or 0
-    local healerCount = GroupInfo.healerCount or 0
-    local damageCount = GroupInfo.damageCount or 0
-
-    return GetRoleIconMarkup("TANK") .. tankCount .. " " ..
-        GetRoleIconMarkup("HEALER") .. healerCount .. " " ..
-        GetRoleIconMarkup("DPS") .. damageCount
-end
-
 function GroupInfo:ForceUpdate()
     self.updatePending = true
+    -- addon.Msg("GroupInfo:ForceUpdate")
 end
 
 function GroupInfo:HasUpdate()
@@ -91,6 +40,7 @@ end
 
 function GroupInfo:ClearUpdate()
     self.updatePending = false
+    -- addon.Msg("GroupInfo:ClearUpdate")
 end
 
 -- Loot Spec
@@ -98,7 +48,9 @@ end
 local function UpdateLootSpec()
     local specID = GetLootSpecialization() or 0
     local _, name, _, _, _, _, _ = GetSpecializationInfoForSpecID(specID)
-    name = name or "Current Spec"
+    if not name then
+        name = GroupInfo.spec or "Current Spec"
+    end
 
     GroupInfo.lootSpec = FormatInfo("Loot", name)
 end
@@ -108,18 +60,22 @@ end
 local function UpdateLoadout()
     local specID = PlayerUtil.GetCurrentSpecID() -- First get the current specialization ID
     local savedConfigID = C_ClassTalents.GetLastSelectedSavedConfigID(specID)
+    -- local savedConfigID = C_ClassTalents.GetActiveConfigID(specID)
 
-    local name = "Default"
+    local loadOutName = "Default"
     if savedConfigID then
         local configInfo = C_Traits.GetConfigInfo(savedConfigID)
         if configInfo and configInfo.name then
-            name = configInfo.name
+            loadOutName = configInfo.name
         end
     end
+    -- addon.Msg("Loadout", loadOutName)
 
+    -- current spec name
     local _, specName = GetSpecializationInfoByID(specID)
     specName = specName or "Unknown"
 
+    -- hero talents
     local hero = "Unknown"
     local heroSubTreeID = C_ClassTalents.GetActiveHeroTalentSpec()
     if heroSubTreeID then
@@ -129,9 +85,17 @@ local function UpdateLoadout()
         end
     end
 
+    -- loot spec
+    local lootSpecID = GetLootSpecialization() or 0
+    local _, lootName = GetSpecializationInfoForSpecID(lootSpecID)
+    if not lootName then -- current specialization
+        lootName = specName
+    end
+
     GroupInfo.spec = FormatInfo("Spec", specName)
     GroupInfo.hero = FormatInfo("Hero", hero)
-    GroupInfo.loadout = FormatInfo("Loadout", name)
+    GroupInfo.loadout = FormatInfo("Loadout", loadOutName)
+    GroupInfo.lootSpec = FormatInfo("Loot", lootName)
 end
 
 -- Dungeon Difficulty
@@ -244,6 +208,14 @@ local function UpdateRaidComp()
     GroupInfo.damageCount = damageCount
 end
 
+local function UpdateDifficulty()
+    if IsInRaid() then
+        UpdateRaidDifficulty()
+    else
+        UpdateDungeonDifficulty()
+    end
+end
+
 -- Group Number
 -- GROUP_ROSTER_UPDATE, PLAYER_ROLES_ASSIGNED
 local function UpdateGroupNumber()
@@ -304,47 +276,36 @@ eventFrame:SetScript("OnEvent", function(self, event)
         event = "DO_EVERYTHING"
     end
 
-    GroupInfo.updatePending = true;
-
-    if event == "PLAYER_ENTERING_WORLD" then
-        event = "DO_EVERYTHING"
-    elseif event == "ZONE_CHANGED_NEW_AREA" then
-        event = "DO_EVERYTHING"
-    end
-
-    if event == "DO_EVERYTHING" then
-        UpdateLootSpec()
-        UpdateLoadout()
-        UpdateDungeonDifficulty()
-        if IsInRaid() then
-            UpdateRaidDifficulty()
-            UpdateGroupNumber()
-            UpdateRaidComp()
+    C_Timer.After(0.5, function()
+        -- print(event)
+        if event == "PLAYER_ENTERING_WORLD" then
+            event = "DO_EVERYTHING"
+        elseif event == "ZONE_CHANGED_NEW_AREA" then
+            event = "DO_EVERYTHING"
         end
-        return
-    end
 
-    -- This is the only reliable event I have found when loadout changes
-    if event == "INSPECT_READY" or event == "TRAIT_CONFIG_UPDATED" then
-        UpdateLoadout()
-        return
-    end
+        local isInRaid = IsInRaid()
+        if event == "DO_EVERYTHING" then
+            UpdateLoadout()
+            UpdateDungeonDifficulty()
+            if isInRaid then
+                UpdateRaidDifficulty()
+                UpdateGroupNumber()
+                UpdateRaidComp()
+            end
+        elseif event == "INSPECT_READY" or event == "TRAIT_CONFIG_UPDATED" then
+            UpdateLoadout()
+        elseif event == "PLAYER_DIFFICULTY_CHANGED" or event == "CHALLENGE_MODE_START" then
+            UpdateDifficulty()
+        elseif event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ROLES_ASSIGNED" then
+            if isInRaid then
+                UpdateGroupNumber()
+                UpdateRaidComp()
+            end
+        elseif event == "PLAYER_LOOT_SPEC_UPDATED" then
+            UpdateLoadout()
+        end
 
-    if event == "PLAYER_DIFFICULTY_CHANGED" or event == "CHALLENGE_MODE_START" then
-        UpdateRaidDifficulty()
-        UpdateDungeonDifficulty()
-        return
-    end
-
-    -- Looks like GRU is ALWAYS followed by PRA, could probs eliminate one (GRU)
-    if event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ROLES_ASSIGNED" then
-        UpdateGroupNumber()
-        UpdateRaidComp()
-        return
-    end
-
-    if event == "PLAYER_LOOT_SPEC_UPDATED" then
-        UpdateLootSpec()
-        return
-    end
+        GroupInfo:ForceUpdate()
+    end)
 end)

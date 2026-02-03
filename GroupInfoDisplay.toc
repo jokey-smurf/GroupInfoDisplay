@@ -4,6 +4,7 @@
 ## Notes: Addon replacement for FUNKI's Weakaura Group Info Display. Type /gid for commands.
 ## Author: Jokey Smurf
 ## IconTexture: Interface\AddOns\GroupInfoDisplay\Media\logo
+## LoadSavedVariablesFirst: 1
 ## SavedVariables: GroupInfoDisplayDB
 
 ## Category-enUS: Smurf

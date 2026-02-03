@@ -75,6 +75,7 @@ local function SetLocked(lock)
         lock = true
     end
     _locked = lock
+    Msg("Locked", _locked)
     if _locked then
         frame:SetBackdropColor(0, 0, 0, 0)
         frame:SetBackdropBorderColor(0, 0, 0, 0)
@@ -124,15 +125,16 @@ frame:SetScript("OnUpdate", function(self, delta)
     local displayText = ""
     local inInstance, instanceType = IsInInstance()
     local offset = 0 -- GroupInfoDisplayDB.fontSize
+    local raidCompShown = false
     if IsInRaid() then
         if GroupInfoDisplayDB.showGroupNumber then
             displayText = displayText .. GI.groupNumber .. "\n"
             offset = GroupInfoDisplayDB.fontSize + text:GetSpacing()
         end
         if GroupInfoDisplayDB.showRaidComp then
-            raidCompAlpha = 1
+            raidCompShown = true
             displayText = displayText .. "\n"
-            raidComp:UpdateRoleCounts(GI.tankCount, 24, GI.damageCount)
+            raidComp:UpdateRoleCounts(GI.tankCount, GI.healerCount, GI.damageCount)
         end
         if GroupInfoDisplayDB.showRaidDifficulty then
             displayText = displayText .. GI.raidDifficulty .. "\n"
@@ -170,18 +172,18 @@ frame:SetScript("OnUpdate", function(self, delta)
     end
     text:SetText(displayText)
 
-    -- Auto-resize frame based on text width
-    local raidCompWidth = GroupInfoDisplayDB.showRaidComp and raidComp:GetWidth() or 0
+    -- Auto-resize frame
+    local raidCompWidth = raidCompShown and raidComp:GetWidth() or 0
     local textWidth = math.max(text:GetStringWidth(), raidCompWidth) + 10
-    textWidth = math.min(50, textWidth)
+    textWidth = math.max(50, textWidth)
     frame:SetWidth(textWidth)
 
     local textHeight = text:GetStringHeight() + 10
-    textheight = math.min(20, textHeight)
+    textheight = math.max(20, textHeight)
     frame:SetHeight(textHeight)
 
     raidComp.frame:SetPoint("TOP", frame, "TOP", 0, -(5 + offset))
-    raidComp.frame:SetShown(GroupInfoDisplayDB.showRaidComp)
+    raidComp.frame:SetShown(raidCompShown)
 end)
 
 
@@ -288,7 +290,7 @@ local function ApplyFont()
     text:SetFont(fontPath, fontSize, flags)
 
     raidComp:ChangeFontSize(fontSize)
-    raidComp:UpdateRoleCounts(GI.tankCount, GI.healerCount, GI.dpsCount)
+    -- raidComp:UpdateRoleCounts(GI.tankCount, GI.healerCount, GI.dpsCount)
 
     GI:ForceUpdate()
 end
@@ -298,8 +300,10 @@ end
 local function ApplyConfig(reset)
     if not reset then reset = false end
 
+    local usedSavedConfig = true
     for k, v in pairs(DEFAULT_CONFIG) do
         if reset or GroupInfoDisplayDB[k] == nil then
+            usedSavedConfig = false
             GroupInfoDisplayDB[k] = v
         end
     end
@@ -315,7 +319,7 @@ local function ApplyConfig(reset)
     )
 
     -- unlock on reset
-    SetLocked(not reset)
+    SetLocked(usedSavedConfig)
     ApplyFont()
 
     -- force redraw
@@ -368,10 +372,10 @@ loginFrame:SetScript("OnEvent", function(self, event)
         return
     end
 
-    if event == "UI_SCALE_CHANGED" or event == "DISPLAY_SIZE_CHANGED" then
-        CTimer.After(0.5, ApplyFont())
-        return
-    end
+    -- if event == "UI_SCALE_CHANGED" or event == "DISPLAY_SIZE_CHANGED" then
+    --     CTimer.After(0.5, ApplyFont())
+    --     return
+    -- end
 
     if event == "PLAYER_LOGIN" then
         ApplyConfig()
