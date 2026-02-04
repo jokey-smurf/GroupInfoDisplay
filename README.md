@@ -28,4 +28,4 @@ NOTE: It is only moveable when it is unlocked (denoted by the presence of backgr
 Configuration is done by right-clicking the GID display and toggling the 
 applicable information in the pop-up menu.
 
-Coded with 100% **VIBE**
+>Coded with 100% **VIBE**

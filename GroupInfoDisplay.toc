@@ -7,7 +7,7 @@
 ## LoadSavedVariablesFirst: 1
 ## SavedVariables: GroupInfoDisplayDB
 
-## Category-enUS: Smurf
+## Category: Smurf
 
 RaidComp.lua
 GroupInfo.lua
