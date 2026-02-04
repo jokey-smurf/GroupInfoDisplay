@@ -15,8 +15,8 @@ local DEFAULT_CONFIG = {
     showRaidComp = true,
     showRaidDifficulty = true,
     showDungeonDifficulty = true,
-    showSpec = true,
-    showHero = true,
+    showSpec = false,
+    showHero = false,
     showLoadout = true,
     showLootSpec = true,
     hideInCombat = false,
@@ -46,7 +46,8 @@ addon.IsLockedDown = IsLockedDown
 
 -- login message
 local _version = C_AddOns.GetAddOnMetadata(addonName, "Version") or ""
-Msg("Version", _version)
+SLASH_GROUPINFODISPLAY1 = "/gid"
+Msg("Version:", _version, "  Options:", SLASH_GROUPINFODISPLAY1)
 
 -- Create main frame with backdrop support
 local frame = CreateFrame("Frame", "GroupInfoDisplayFrame", UIParent, "BackdropTemplate")
@@ -75,7 +76,7 @@ local function SetLocked(lock)
         lock = true
     end
     _locked = lock
-    Msg("Locked", _locked)
+    -- Msg("Locked", _locked)
     if _locked then
         frame:SetBackdropColor(0, 0, 0, 0)
         frame:SetBackdropBorderColor(0, 0, 0, 0)
@@ -327,7 +328,6 @@ local function ApplyConfig(reset)
 end
 
 -- Slash command
-SLASH_GROUPINFODISPLAY1 = "/gid"
 SlashCmdList["GROUPINFODISPLAY"] = function(msg)
     local arg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
 
@@ -355,8 +355,6 @@ local loginFrame = CreateFrame("Frame")
 loginFrame:RegisterEvent("PLAYER_LOGIN")
 loginFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 loginFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-loginFrame:RegisterEvent("UI_SCALE_CHANGED")
-loginFrame:RegisterEvent("DISPLAY_SIZE_CHANGED")
 loginFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_REGEN_DISABLED" then
         if GroupInfoDisplayDB.hideInCombat then
@@ -371,11 +369,6 @@ loginFrame:SetScript("OnEvent", function(self, event)
         end
         return
     end
-
-    -- if event == "UI_SCALE_CHANGED" or event == "DISPLAY_SIZE_CHANGED" then
-    --     CTimer.After(0.5, ApplyFont())
-    --     return
-    -- end
 
     if event == "PLAYER_LOGIN" then
         ApplyConfig()

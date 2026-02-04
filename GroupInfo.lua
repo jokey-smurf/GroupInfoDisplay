@@ -112,12 +112,6 @@ local function UpdateDungeonDifficulty()
 
     -- addon.Msg("DungeonDifficulty", name, "- instanceType", difficultyName)
 
-    -- Blizz UI Bug
-    -- After exiting Story/Follower/Timewalking/Delves (maybe anything other than normal/heroic/mythic),
-    -- the API does not always reset the dungeon difficulty to the previously selected difficulty.
-    -- In the difficulty menu, no difficulties are selected.
-    -- The previous difficulty may NOT be selected by the user, any other can be.
-
     if instanceType == "none" then
         if dungeonDiff ~= 1 and dungeonDiff ~= 2 and dungeonDiff ~= 23 then
             GroupInfo.dungeonDifficulty = FormatInfo("Dungeon", "Not Set", colorNone)
@@ -144,7 +138,7 @@ local function UpdateDungeonDifficulty()
     elseif dungeonDiff == 208 then -- Delve
         color = colorNone
     else
-        -- Timewalking/follower/story mode can do funky things to dungeon difficulty on exit
+        -- At one time, timewalking/follower/story mode can do funky things to dungeon difficulty on exit
         -- Doesn't always reset or puts it in a funky mode (i.e. Normal Scaling 1-5, id 150)
         -- Additional catch all for above
         name = "Not Set"
@@ -246,7 +240,6 @@ eventFrame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
 -- eventFrame:RegisterEvent("INSPECT_READY")
 -- eventFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
--- eventFrame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
 -- Combat monitoring
 eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
